@@ -49,9 +49,9 @@ DEFAULT_MODEL = MODEL_BGE_SMALL
 
 RRF_K = 60
 # Weight of the keyword list in hybrid fusion, relative to the dense list.
-BM25_RRF_WEIGHT = 1.0
+BM25_RRF_WEIGHT = 0.5
 # Score multiplier for tests, docs and changelogs (1.0 turns the source prior off).
-NON_SOURCE_WEIGHT = 1.0
+NON_SOURCE_WEIGHT = 0.5
 
 # An exact filename or symbol match (header column) is a much stronger signal than one stemmed
 # word in the body.
