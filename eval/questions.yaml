@@ -1,0 +1,94 @@
+# Development set: used while tuning retrieval. Questions are phrased the way a developer would ask
+# a coding agent, without copying identifiers from the code. `expected_paths` lists the files where
+# the answer lives; a hit anywhere in the top k counts. Paths refer to corpus.yaml at the pinned tags
+# in scripts/fetch_corpus.py.
+- id: req-auth-redirect
+  question: When following a redirect to a different host, where is it decided whether to drop the Authorization header?
+  expected_paths: [requests/src/requests/sessions.py]
+- id: req-env-proxies
+  question: How are proxy settings picked up from environment variables such as HTTPS_PROXY and NO_PROXY?
+  expected_paths: [requests/src/requests/utils.py, requests/src/requests/sessions.py]
+- id: req-retries
+  question: Where is the retry policy for failed connections configured on the connection pool?
+  expected_paths: [requests/src/requests/adapters.py]
+- id: req-encoding
+  question: How does the library guess the text encoding of a response body when the server does not declare one?
+  expected_paths: [requests/src/requests/models.py, requests/src/requests/utils.py]
+- id: req-cookie-jar
+  question: Where are cookies set by a server response stored into the session so later requests send them back?
+  expected_paths: [requests/src/requests/cookies.py, requests/src/requests/sessions.py]
+- id: req-digest
+  question: How is the answer to an HTTP digest authentication challenge computed?
+  expected_paths: [requests/src/requests/auth.py]
+- id: req-redirect-limit
+  question: Where does the client stop following redirects after too many hops?
+  expected_paths: [requests/src/requests/sessions.py]
+- id: httpx-ssl
+  question: Where is the default TLS context created and the certificate bundle loaded?
+  expected_paths: [httpx/httpx/_config.py]
+- id: httpx-timeouts
+  question: How are separate limits for connecting, reading, writing and waiting for a pooled connection represented?
+  expected_paths: [httpx/httpx/_config.py]
+- id: httpx-decompress
+  question: Where are compressed bodies such as gzip or brotli decompressed while streaming?
+  expected_paths: [httpx/httpx/_decoders.py]
+- id: httpx-asgi
+  question: How can requests be sent directly to an ASGI web application in the same process, without a network?
+  expected_paths: [httpx/httpx/_transports/asgi.py]
+- id: httpx-redirect-build
+  question: Where is the follow-up request built when the server answers with a 3xx redirect?
+  expected_paths: [httpx/httpx/_client.py]
+- id: httpx-multipart
+  question: How is a form upload with files encoded into the request body?
+  expected_paths: [httpx/httpx/_multipart.py]
+- id: httpx-url-parse
+  question: Where are URLs split into scheme, host, port and path and validated?
+  expected_paths: [httpx/httpx/_urlparse.py]
+- id: httpx-mounts
+  question: How does the client choose a different transport or proxy depending on the URL scheme or host?
+  expected_paths: [httpx/httpx/_client.py, httpx/httpx/_utils.py]
+- id: click-envvar
+  question: Where does an option read its value from an environment variable when it is not given on the command line?
+  expected_paths: [click/src/click/core.py]
+- id: click-completion
+  question: How are shell completion scripts generated for bash and zsh?
+  expected_paths: [click/src/click/shell_completion.py]
+- id: click-help-format
+  question: Where is the help page laid out, with text wrapped to the terminal width?
+  expected_paths: [click/src/click/formatting.py, click/src/click/_textwrap.py]
+- id: click-progress
+  question: How is a progress bar drawn and updated in the terminal?
+  expected_paths: [click/src/click/_termui_impl.py, click/src/click/termui.py]
+- id: click-types
+  question: Where are argument values converted and checked, for example numbers within a range or existing file paths?
+  expected_paths: [click/src/click/types.py]
+- id: click-testing
+  question: How can a command be invoked from a unit test while capturing its printed output and exit code?
+  expected_paths: [click/src/click/testing.py]
+- id: click-parser
+  question: Where are the raw command-line arguments split into options and positional values?
+  expected_paths: [click/src/click/parser.py]
+- id: click-confirm
+  question: How does a command ask the user a yes or no question before continuing?
+  expected_paths: [click/src/click/termui.py]
+- id: rich-cell-width
+  question: How is the on-screen width of wide characters such as Chinese or emoji measured?
+  expected_paths: [rich/rich/cells.py, rich/rich/_cell_widths.py]
+- id: rich-progress-columns
+  question: Where are the pieces of a progress display, such as a spinner, a bar and the time remaining, implemented?
+  expected_paths: [rich/rich/progress.py]
+- id: rich-table-widths
+  question: How are table column widths chosen so the table fits in the terminal?
+  expected_paths: [rich/rich/table.py]
+- id: rich-traceback
+  question: Where are Python exceptions rendered as highlighted tracebacks with local variables?
+  expected_paths: [rich/rich/traceback.py]
+- id: rich-markup
+  question: How are inline style tags like bold or red in square brackets parsed out of a string?
+  expected_paths: [rich/rich/markup.py]
+- id: rich-live
+  question: How does a display refresh its content in place in the terminal instead of printing new lines?
+  expected_paths: [rich/rich/live.py]
+- id: rich-syntax
+  question: Where is source code rendered with syntax highlighting and line numbers?
+  expected_paths: [rich/rich/syntax.py]

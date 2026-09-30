@@ -1,0 +1,32 @@
+# Held-out set: written together with questions.yaml and not looked at while tuning retrieval.
+# It exists to catch tuning that only fits the development questions.
+- id: req-chunked-upload
+  question: How is a request body sent when the data comes from a generator of unknown length?
+  expected_paths: [requests/src/requests/models.py]
+- id: req-mount-adapter
+  question: How can a custom transport adapter be registered for all URLs that start with a given prefix?
+  expected_paths: [requests/src/requests/sessions.py]
+- id: httpx-raise-status
+  question: Where is an error raised on demand for responses with a 4xx or 5xx status?
+  expected_paths: [httpx/httpx/_models.py]
+- id: httpx-stream-iter
+  question: How is a streamed response body read chunk by chunk and then closed?
+  expected_paths: [httpx/httpx/_models.py]
+- id: httpx-cli-output
+  question: Where does the command-line tool print the status line, headers and body of a response?
+  expected_paths: [httpx/httpx/_main.py]
+- id: httpx-digest
+  question: How does the client answer a digest authentication challenge from the server?
+  expected_paths: [httpx/httpx/_auth.py]
+- id: click-multi-group
+  question: How can commands from several separate groups be combined into one command-line interface?
+  expected_paths: [click/src/click/core.py]
+- id: rich-color-detect
+  question: How does the console decide which color system the terminal supports?
+  expected_paths: [rich/rich/console.py]
+- id: rich-pretty
+  question: How are nested dictionaries and lists pretty-printed with indentation and highlighting?
+  expected_paths: [rich/rich/pretty.py]
+- id: req-json-error
+  question: What error is raised when a response body cannot be decoded as JSON?
+  expected_paths: [requests/src/requests/exceptions.py, requests/src/requests/models.py]
