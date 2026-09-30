@@ -30,9 +30,9 @@ def test_split_identifier_splits_camel_case():
 
 
 def test_header_tokens_text_includes_kind_and_repo():
-    tokens = ti.header_tokens_text("imagekit/src/kie_images.py", "imagekit", "generate_image", "function").split()
-    assert "kie" in tokens
-    assert "images" in tokens
+    tokens = ti.header_tokens_text("imagekit/src/image_client.py", "imagekit", "generate_image", "function").split()
+    assert "client" in tokens
+    assert "image" in tokens
     assert "generate" in tokens
     assert "function" in tokens
     assert "imagekit" in tokens
