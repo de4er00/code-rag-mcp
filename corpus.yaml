@@ -1,0 +1,12 @@
+# Repositories to index. Paths are relative to this file.
+# `python scripts/fetch_corpus.py` clones the benchmark set below at pinned tags;
+# replace the list with your own repositories to search your code.
+repos:
+  - name: requests
+    path: corpus/requests
+  - name: httpx
+    path: corpus/httpx
+  - name: click
+    path: corpus/click
+  - name: rich
+    path: corpus/rich

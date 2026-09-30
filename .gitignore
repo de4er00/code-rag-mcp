@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+*.egg-info/
+
+# Built locally, never committed: the index, downloaded model weights and the cloned benchmark repos.
+data/
+model_cache/
+corpus/
+*.log

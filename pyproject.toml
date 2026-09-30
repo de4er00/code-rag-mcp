@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "code-rag-mcp"
+version = "0.3.0"
+description = "Local hybrid code search (BM25 + embeddings) over your repositories, served to coding agents through MCP"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+dependencies = [
+    "fastembed>=0.8",
+    "mcp>=2.2",
+    "numpy>=2.0",
+    "PyYAML>=6.0",
+    "snowballstemmer>=3.0",
+]
+
+[project.optional-dependencies]
+gpu = ["sentence-transformers>=6.0", "torch>=2.6"]
+dev = ["pytest>=9.0"]
+
+[project.scripts]
+code-rag = "code_rag.cli:main"
+code-rag-mcp = "code_rag.mcp_server:main"
+
+[tool.setuptools]
+packages = ["code_rag"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
