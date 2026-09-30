@@ -7,7 +7,7 @@ I built the first version to let an agent find its way around a private platform
 ## How it works
 
 - **Chunking follows the code.** Python files are split with the `ast` module: the module docstring and imports, each function, and each class. Large classes become a header chunk plus one chunk per method. A gap-filling pass turns any line not covered by a definition (constants, `if __name__ == "__main__"` blocks) into its own chunk, so nothing escapes indexing or redaction. Markdown is split by headings, everything else by line windows.
-- **Secrets are redacted before anything is stored:** tokens, API keys, bearer headers, credential assignments, phone numbers, IP addresses. The first run of the original tool found a live bot token hard-coded in a script; that token became the acceptance test for this step.
+- **Secrets are redacted before anything is stored:** tokens, API keys, bearer headers, credential assignments, phone numbers, IP addresses.
 - **Two retrievers.**
   - Keyword search uses SQLite FTS5 with BM25 over two columns: a header (path, symbol, kind; split on separators and camelCase, weighted 3×) and the stemmed, stopword-filtered body.
   - Dense search is cosine similarity over embeddings kept as blobs in the same database. The default model is `bge-small-en-v1.5` through fastembed on CPU; `multilingual-e5-large` on a CUDA GPU is optional.
@@ -15,11 +15,11 @@ I built the first version to let an agent find its way around a private platform
 - **Incremental indexing.** Files are tracked by sha256. Unchanged files are skipped, deleted files are removed from all three tables, and embedding is committed in small batches, so an interrupted run resumes where it stopped. The index stores logical paths (`repo/relative/path`), never local ones, so it can be copied between machines.
 - **MCP server** (stdio) with three tools: `search_code`, `read_chunk`, `list_repos`.
 
-## Measured, not eyeballed
+## Benchmark
 
 The benchmark indexes four well-known projects at pinned tags (requests 2.32.3, httpx 0.28.1, click 8.1.7, rich 13.9.4): 602 files, 6,718 chunks. There are 40 questions, phrased the way a developer asks an agent, without copying identifiers. Each lists the file where the answer lives. 30 questions are for development; 10 were held out and looked at once, after the settings below were fixed.
 
-The first run was disappointing. Hybrid search was worse than dense search alone:
+In the first run hybrid search was worse than dense search alone:
 
 | dev set, 30 questions | recall@5 | recall@10 | MRR |
 |---|---|---|---|
