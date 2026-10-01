@@ -42,16 +42,20 @@ def test_a_candidate_the_cross_encoder_likes_moves_up_but_not_alone(conn, monkey
     assert order(conn, monkeypatch, names, scores) == ["alpha", "retry", "beta", "other", "test_retry"]
 
 
-def test_ties_go_to_the_cross_encoder(conn, monkeypatch):
+def test_a_tie_keeps_the_retrieval_order(conn, monkeypatch):
     # Retrieval and cross-encoder disagree symmetrically, so both ends tie under RRF.
-    scores = {"test_retry": 0.2, "retry": 0.9, "other": 0.5}
-    assert order(conn, monkeypatch, ["test_retry", "other", "retry"], scores) == ["retry", "test_retry", "other"]
+    scores = {"test_retry": 0.4, "retry": 0.9, "other": 0.5}
+    assert order(conn, monkeypatch, ["test_retry", "other", "retry"], scores) == ["test_retry", "retry", "other"]
 
 
-def test_the_source_prior_applies_to_the_cross_encoder_scores(conn, monkeypatch):
-    monkeypatch.setattr(config, "NON_SOURCE_WEIGHT", 0.5)
-    scores = {"test_retry": 0.8, "retry": 0.6}
-    assert order(conn, monkeypatch, ["test_retry", "retry"], scores) == ["retry", "test_retry"]  # 0.8 * 0.5 < 0.6
+@pytest.mark.parametrize("prior, expected", [
+    (1.0, ["test_retry", "other", "retry"]),
+    (0.5, ["test_retry", "retry", "other"]),  # 0.8 * 0.5 drops the test below retry for the cross-encoder
+])
+def test_the_source_prior_applies_to_the_cross_encoder_scores(conn, monkeypatch, prior, expected):
+    monkeypatch.setattr(config, "NON_SOURCE_WEIGHT", prior)
+    scores = {"test_retry": 0.8, "retry": 0.6, "other": 0.1}
+    assert order(conn, monkeypatch, ["test_retry", "other", "retry"], scores) == expected
 
 
 def test_candidates_past_the_window_keep_their_order(conn, monkeypatch):
@@ -62,7 +66,7 @@ def test_candidates_past_the_window_keep_their_order(conn, monkeypatch):
 
 def test_k_limits_the_reranked_list(conn, monkeypatch):
     scores = {"test_retry": 0.1, "retry": 0.9, "other": 0.5}
-    assert order(conn, monkeypatch, ["test_retry", "other", "retry"], scores, k=1) == ["retry"]
+    assert order(conn, monkeypatch, ["retry", "other", "test_retry"], scores, k=1) == ["retry"]
 
 
 def test_unknown_mode_is_rejected(conn):

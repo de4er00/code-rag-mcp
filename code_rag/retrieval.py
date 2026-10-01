@@ -180,7 +180,7 @@ def rerank_candidates(
     reranker: "Optional[str]" = None,
 ) -> list[tuple[int, float]]:
     """Rerank the first RERANK_CANDIDATES candidates: the cross-encoder's order (its score times
-    the source prior) is fused with the incoming order by RRF, ties going to the cross-encoder.
+    the source prior) is fused with the incoming order by RRF; a tie keeps the incoming order.
     Later candidates keep their order after them. Candidates arrive capped per file, so the
     result is capped too."""
     from . import rerank
@@ -196,9 +196,7 @@ def rerank_candidates(
     reranked = sorted(head, key=lambda cid: -relevance[cid])
     # Fused, not replaced: on the dev questions the cross-encoder's order alone put docs, tests and
     # look-alike code from another repository on top, and lost to plain hybrid search.
-    fused = dict(rrf_fuse([head, reranked], k=config.RRF_K))
-    order = sorted(head, key=lambda cid: (-fused[cid], -relevance[cid]))
-    return ([(cid, fused[cid]) for cid in order] + [(cid, 0.0) for cid in tail])[:k]
+    return (rrf_fuse([head, reranked], k=config.RRF_K) + [(cid, 0.0) for cid in tail])[:k]
 
 
 def rerank_search(
