@@ -1,4 +1,5 @@
-"""Retrieval: BM25 (FTS5), dense cosine (numpy), and hybrid RRF fusion.
+"""Retrieval: BM25 (FTS5), dense cosine (numpy), hybrid RRF fusion, and an optional
+cross-encoder rerank of the fused candidates ("hybrid+rerank").
 
 Every mode applies the same per-file cap (config.MAX_CHUNKS_PER_FILE) to
 the final top-k: candidates are pulled from a larger internal pool, then
@@ -149,6 +150,18 @@ def rrf_fuse(rank_lists: "list[list[int]]", k: int = 60, weights: "list[float] |
     return sorted(scores.items(), key=lambda kv: -kv[1])
 
 
+def hybrid_candidates(
+    conn: sqlite3.Connection, model: str, query: str, n: int, repo: "Optional[str]" = None
+) -> list[tuple[int, float]]:
+    """Fused, prior-weighted and per-file-capped (chunk_id, score) pairs, best first."""
+    pool = _pool_size(n)
+    bm25_ids = [cid for cid, _ in store.bm25_search(conn, query, pool, repo)]
+    dense_ids = [cid for cid, _ in dense_search_ids(conn, model, query, pool, repo)]
+    fused = rrf_fuse([bm25_ids, dense_ids], k=config.RRF_K, weights=[config.BM25_RRF_WEIGHT, 1.0])
+    id_to_path = store.get_paths_for_ids(conn, [cid for cid, _ in fused])
+    return _cap_per_file(_apply_prior(fused, id_to_path), id_to_path, config.MAX_CHUNKS_PER_FILE, n)
+
+
 def hybrid_search(
     conn: sqlite3.Connection,
     model: str,
@@ -156,13 +169,44 @@ def hybrid_search(
     k: int,
     repo: "Optional[str]" = None,
 ) -> list[SearchResult]:
-    pool = _pool_size(k)
-    bm25_ids = [cid for cid, _ in store.bm25_search(conn, query, pool, repo)]
-    dense_ids = [cid for cid, _ in dense_search_ids(conn, model, query, pool, repo)]
-    fused = rrf_fuse([bm25_ids, dense_ids], k=config.RRF_K, weights=[config.BM25_RRF_WEIGHT, 1.0])
-    id_to_path = store.get_paths_for_ids(conn, [cid for cid, _ in fused])
-    capped = _cap_per_file(_apply_prior(fused, id_to_path), id_to_path, config.MAX_CHUNKS_PER_FILE, k)
-    return _to_results(conn, capped)
+    return _to_results(conn, hybrid_candidates(conn, model, query, k, repo))
+
+
+def rerank_candidates(
+    conn: sqlite3.Connection,
+    query: str,
+    candidates: list[tuple[int, float]],
+    k: int,
+    reranker: "Optional[str]" = None,
+) -> list[tuple[int, float]]:
+    """Reorder the first RERANK_CANDIDATES candidates by cross-encoder score times the source
+    prior. Later candidates keep their fused order after them. Candidates arrive capped per
+    file, so the result is capped too."""
+    from . import rerank
+
+    head = [cid for cid, _ in candidates[: config.RERANK_CANDIDATES]]
+    tail = [cid for cid, _ in candidates[config.RERANK_CANDIDATES :]]
+    # The text the embedding model saw: the path | symbol | kind header, then the chunk.
+    inputs = store.get_embedding_inputs_for_ids(conn, head)
+    id_to_path = store.get_paths_for_ids(conn, head)
+    head = [cid for cid in head if cid in inputs]
+    scores = rerank.score(query, [inputs[cid] for cid in head], reranker)
+    reranked = sorted(
+        ((cid, s * source_prior(id_to_path[cid])) for cid, s in zip(head, scores)), key=lambda item: -item[1]
+    )
+    return (reranked + [(cid, 0.0) for cid in tail])[:k]
+
+
+def rerank_search(
+    conn: sqlite3.Connection,
+    model: str,
+    query: str,
+    k: int,
+    repo: "Optional[str]" = None,
+    reranker: "Optional[str]" = None,
+) -> list[SearchResult]:
+    candidates = hybrid_candidates(conn, model, query, max(k, config.RERANK_CANDIDATES), repo)
+    return _to_results(conn, rerank_candidates(conn, query, candidates, k, reranker))
 
 
 def search(
@@ -172,6 +216,7 @@ def search(
     mode: str = "hybrid",
     repo: "Optional[str]" = None,
     model: "Optional[str]" = None,
+    reranker: "Optional[str]" = None,
 ) -> list[SearchResult]:
     model = model or config.DEFAULT_MODEL
     if mode == "bm25":
@@ -180,4 +225,6 @@ def search(
         return dense_search(conn, model, query, k, repo)
     if mode == "hybrid":
         return hybrid_search(conn, model, query, k, repo)
+    if mode == "hybrid+rerank":
+        return rerank_search(conn, model, query, k, repo, reranker)
     raise ValueError(f"unknown mode: {mode}")

@@ -15,15 +15,19 @@ app = MCPServer("code-rag")
 
 
 @app.tool()
-def search_code(query: str, k: int = 8, repo: "Optional[str]" = None) -> list[dict]:
+def search_code(query: str, k: int = 8, repo: "Optional[str]" = None, rerank: bool = False) -> list[dict]:
     """Hybrid (BM25 + dense) search over the indexed repositories.
+
+    rerank=True reorders the top candidates with a cross-encoder: better ranking for
+    "where is X implemented" questions, at the cost of a slower query.
 
     Returns a list of {chunk_id, path, repo, symbol, kind,
     start_line, end_line, snippet, score}, best match first.
     """
     conn = store.connect()
     try:
-        results = retrieval.search(conn, query, k=k, mode="hybrid", repo=repo)
+        mode = "hybrid+rerank" if rerank else "hybrid"
+        results = retrieval.search(conn, query, k=k, mode=mode, repo=repo)
         return [
             {
                 "chunk_id": r.chunk_id,

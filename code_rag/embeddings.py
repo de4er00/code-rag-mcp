@@ -12,6 +12,8 @@ not fit comfortably in 16 GB of RAM.
 from __future__ import annotations
 
 import gc
+import os
+from pathlib import Path
 
 import numpy as np
 
@@ -48,7 +50,8 @@ def _needs_e5_prefix(base_model_id: str) -> bool:
 
 
 def _cache_dir() -> str:
-    d = config.PROJECT_ROOT / "model_cache"
+    # CODE_RAG_MODEL_CACHE lets several checkouts share one copy of the downloaded weights.
+    d = Path(os.environ.get("CODE_RAG_MODEL_CACHE") or config.PROJECT_ROOT / "model_cache")
     d.mkdir(parents=True, exist_ok=True)
     return str(d)
 

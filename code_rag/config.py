@@ -53,6 +53,15 @@ BM25_RRF_WEIGHT = 0.5
 # Score multiplier for tests, docs and changelogs (1.0 turns the source prior off).
 NON_SOURCE_WEIGHT = 0.5
 
+# Optional cross-encoder reranker for the "hybrid+rerank" mode, over the top fused candidates.
+# The default runs on CPU through fastembed (ONNX) and is loaded only when that mode is used.
+# The "@st-cuda" suffix selects sentence-transformers on a CUDA GPU in fp16, as for embeddings.
+RERANK_MODEL = "Xenova/ms-marco-MiniLM-L-6-v2"
+RERANK_MODEL_GPU = "BAAI/bge-reranker-v2-m3@st-cuda"
+RERANK_CANDIDATES = 20
+RERANK_BATCH_SIZE = 8
+SEARCH_MODES = ("bm25", "dense", "hybrid", "hybrid+rerank")
+
 # An exact filename or symbol match (header column) is a much stronger signal than one stemmed
 # word in the body.
 HEADER_BM25_WEIGHT = 3.0
