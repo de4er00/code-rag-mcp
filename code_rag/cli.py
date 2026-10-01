@@ -63,7 +63,8 @@ def cmd_eval(args: argparse.Namespace) -> None:
             fn = f" | function level recall@5={m['fn_recall@5']:.2f} mrr={m['fn_mrr']:.2f}" if spans else ""
             print(f"  {mode:13s} recall@5={m['recall@5']:.2f} recall@10={m['recall@10']:.2f} mrr={m['mrr']:.2f}"
                   f"{fn}  {m['latency_ms']:.0f} ms  misses@5={','.join(m['misses']) or '-'}")
-    out = evaluation.EVAL_DIR / f"results-{model.split('/')[-1].replace('@', '-')}.md"
+    name = "-".join(m.split("/")[-1].replace("@", "-") for m in [model] + ([args.reranker] if args.reranker else []))
+    out = evaluation.EVAL_DIR / f"results-{name}.md"
     out.write_text(_results_md(model, reranker, report, sets, results), encoding="utf-8")
     print(f"\nWrote {out}")
 

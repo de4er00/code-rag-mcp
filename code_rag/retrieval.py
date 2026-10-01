@@ -179,9 +179,10 @@ def rerank_candidates(
     k: int,
     reranker: "Optional[str]" = None,
 ) -> list[tuple[int, float]]:
-    """Reorder the first RERANK_CANDIDATES candidates by cross-encoder score times the source
-    prior. Later candidates keep their fused order after them. Candidates arrive capped per
-    file, so the result is capped too."""
+    """Rerank the first RERANK_CANDIDATES candidates: the cross-encoder's order (its score times
+    the source prior) is fused with the incoming order by RRF, ties going to the cross-encoder.
+    Later candidates keep their order after them. Candidates arrive capped per file, so the
+    result is capped too."""
     from . import rerank
 
     head = [cid for cid, _ in candidates[: config.RERANK_CANDIDATES]]
@@ -191,10 +192,13 @@ def rerank_candidates(
     id_to_path = store.get_paths_for_ids(conn, head)
     head = [cid for cid in head if cid in inputs]
     scores = rerank.score(query, [inputs[cid] for cid in head], reranker)
-    reranked = sorted(
-        ((cid, s * source_prior(id_to_path[cid])) for cid, s in zip(head, scores)), key=lambda item: -item[1]
-    )
-    return (reranked + [(cid, 0.0) for cid in tail])[:k]
+    relevance = {cid: s * source_prior(id_to_path[cid]) for cid, s in zip(head, scores)}
+    reranked = sorted(head, key=lambda cid: -relevance[cid])
+    # Fused, not replaced: on the dev questions the cross-encoder's order alone put docs, tests and
+    # look-alike code from another repository on top, and lost to plain hybrid search.
+    fused = dict(rrf_fuse([head, reranked], k=config.RRF_K))
+    order = sorted(head, key=lambda cid: (-fused[cid], -relevance[cid]))
+    return ([(cid, fused[cid]) for cid in order] + [(cid, 0.0) for cid in tail])[:k]
 
 
 def rerank_search(
