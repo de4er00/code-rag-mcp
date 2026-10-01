@@ -1,0 +1,103 @@
+# Harder development set, added after the first benchmark saturated (every method reached 1.00
+# recall@5 on the held-out questions). Three kinds of question:
+#   function   - "where is X implemented" inside a large file; expected_spans name the lines
+#   cross-file - the answer needs two places; expected_all lists groups, each group must be hit
+#   usage      - "how do I"; the docs page and the implementation both count
+# expected_paths is always the file-level answer. A span is "path:first-last" at the pinned tags
+# in scripts/fetch_corpus.py. Questions avoid copying identifiers from the code.
+- id: req-body-length
+  kind: function
+  question: How is the length of an upload body worked out when it is a file object that has already been partly read?
+  expected_paths: [requests/src/requests/utils.py]
+  expected_spans: ["requests/src/requests/utils.py:135-201"]
+- id: req-json-charset
+  kind: function
+  question: When a JSON response declares no charset, how is its Unicode encoding guessed from the first few bytes?
+  expected_paths: [requests/src/requests/utils.py, requests/src/requests/models.py]
+  expected_spans: ["requests/src/requests/utils.py:957-986", "requests/src/requests/models.py:947-978"]
+- id: redirect-post-to-get
+  kind: function
+  question: Why does a POST turn into a GET after some redirects, and where is that rule applied?
+  expected_paths: [requests/src/requests/sessions.py, httpx/httpx/_client.py]
+  expected_spans: ["requests/src/requests/sessions.py:333-353", "httpx/httpx/_client.py:494-515"]
+- id: req-split-lines
+  kind: function
+  question: When a response is read line by line in requests, what happens to a line that is cut in half between two downloaded chunks?
+  expected_paths: [requests/src/requests/models.py]
+  expected_spans: ["requests/src/requests/models.py:857-888"]
+- id: req-rewind-body
+  kind: cross-file
+  question: When a request with a file body is redirected, where is the body's starting offset remembered, and where is the file moved back to it before the body is sent again?
+  expected_paths: [requests/src/requests/models.py, requests/src/requests/utils.py, requests/src/requests/sessions.py]
+  expected_all:
+    - [requests/src/requests/models.py]
+    - [requests/src/requests/utils.py, requests/src/requests/sessions.py]
+- id: httpx-mount-priority
+  kind: function
+  question: When several mounted transports match the same URL, how is the most specific one picked?
+  expected_paths: [httpx/httpx/_utils.py, httpx/httpx/_client.py]
+  expected_spans: ["httpx/httpx/_utils.py:205-223", "httpx/httpx/_client.py:760-769", "httpx/httpx/_client.py:1474-1483"]
+- id: httpx-encode-body
+  kind: function
+  question: Where is the request body built from raw content, form fields, uploaded files or a JSON object, and which content type does each one get?
+  expected_paths: [httpx/httpx/_content.py]
+  expected_spans: ["httpx/httpx/_content.py:107-218"]
+- id: httpx-line-split
+  kind: cross-file
+  question: For a streamed text response, where is the text split into lines across chunk boundaries, including a carriage return at the end of one chunk, and which response method hands those lines to the caller?
+  expected_paths: [httpx/httpx/_decoders.py, httpx/httpx/_models.py]
+  expected_all:
+    - [httpx/httpx/_decoders.py]
+    - [httpx/httpx/_models.py]
+- id: httpx-event-hooks
+  kind: usage
+  question: How do I run a function of my own on every request and every response an httpx client handles, for example to log them?
+  expected_paths: [httpx/docs/advanced/event-hooks.md, httpx/httpx/_client.py]
+  expected_spans: ["httpx/docs/advanced/event-hooks.md:1-65", "httpx/httpx/_client.py:199-217", "httpx/httpx/_client.py:964-999", "httpx/httpx/_client.py:1679-1715"]
+- id: click-version-flag
+  kind: function
+  question: How does the version flag find the installed package's version when it is not passed in explicitly?
+  expected_paths: [click/src/click/decorators.py]
+  expected_spans: ["click/src/click/decorators.py:420-530"]
+- id: click-pager
+  kind: function
+  question: How is long output shown through a pager, and what happens when no pager is configured or the output is not a terminal?
+  expected_paths: [click/src/click/_termui_impl.py, click/src/click/termui.py]
+  expected_spans: ["click/src/click/_termui_impl.py:360-473", "click/src/click/termui.py:251-280"]
+- id: click-complete-option
+  kind: function
+  question: During shell completion, how is it decided whether the word being completed is an option name or a value for the option before it?
+  expected_paths: [click/src/click/shell_completion.py]
+  expected_spans: ["click/src/click/shell_completion.py:437-492", "click/src/click/shell_completion.py:552-596"]
+- id: click-strip-colors
+  kind: cross-file
+  question: Where are color escape codes removed from output that is not going to a terminal, and where is the decision to remove them made?
+  expected_paths: [click/src/click/utils.py, click/src/click/_compat.py]
+  expected_all:
+    - [click/src/click/utils.py]
+    - [click/src/click/_compat.py]
+- id: click-auto-envvar
+  kind: usage
+  question: How do I let every option of my command-line tool be set from environment variables named after the program, without declaring each variable by hand?
+  expected_paths: [click/docs/options.rst, click/src/click/core.py]
+  expected_spans: ["click/docs/options.rst:645-712", "click/src/click/core.py:396-413", "click/src/click/core.py:2896-2913"]
+- id: rich-console-size
+  kind: function
+  question: How does the console work out its width and height, and which environment variables override what the terminal reports?
+  expected_paths: [rich/rich/console.py]
+  expected_spans: ["rich/rich/console.py:991-1041"]
+- id: rich-prompt-choices
+  kind: function
+  question: How does an interactive prompt check the answer against a list of allowed choices and ask again when the answer is invalid?
+  expected_paths: [rich/rich/prompt.py]
+  expected_spans: ["rich/rich/prompt.py:213-301"]
+- id: rich-export-svg
+  kind: usage
+  question: How do I record everything printed to the console and save it as an SVG image?
+  expected_paths: [rich/docs/source/console.rst, rich/rich/console.py]
+  expected_spans: ["rich/docs/source/console.rst:249-285", "rich/rich/console.py:2306-2593"]
+- id: rich-track-loop
+  kind: usage
+  question: How can I wrap a loop over a list so that a progress bar advances on each item?
+  expected_paths: [rich/docs/source/progress.rst, rich/rich/progress.py]
+  expected_spans: ["rich/docs/source/progress.rst:19-29", "rich/rich/progress.py:108-181", "rich/rich/progress.py:1193-1234"]

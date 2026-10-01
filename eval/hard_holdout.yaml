@@ -1,0 +1,68 @@
+# Held-out part of the harder set (same format as hard.yaml). Written and committed before any
+# retrieval change was tried on the harder questions, and not used to choose any setting.
+- id: req-netrc
+  kind: function
+  question: In requests, where does the client fall back to credentials stored in the login file in the user's home directory when a request carries no authentication?
+  expected_paths: [requests/src/requests/utils.py, requests/src/requests/sessions.py]
+  expected_spans: ["requests/src/requests/utils.py:204-258", "requests/src/requests/sessions.py:282-300", "requests/src/requests/sessions.py:457-498"]
+- id: req-ca-bundle
+  kind: function
+  question: Where is a missing or invalid path to a certificate authority bundle reported before the connection is made?
+  expected_paths: [requests/src/requests/adapters.py]
+  expected_spans: ["requests/src/requests/adapters.py:304-357"]
+- id: req-timeouts
+  kind: usage
+  question: How do I give requests separate limits for connecting to the server and for waiting on its response?
+  expected_paths: [requests/docs/user/advanced.rst, requests/src/requests/adapters.py]
+  expected_spans: ["requests/docs/user/advanced.rst:1090-1141", "requests/src/requests/adapters.py:650-665"]
+- id: redirect-body-headers
+  kind: function
+  question: When a redirect changes the method to GET, which body-related headers are removed from the follow-up request?
+  expected_paths: [httpx/httpx/_client.py, requests/src/requests/sessions.py]
+  expected_spans: ["httpx/httpx/_client.py:546-571", "requests/src/requests/sessions.py:222-232"]
+- id: proxy-url-credentials
+  kind: function
+  question: How are a username and password written inside a proxy URL turned into proxy authorization for the connection?
+  expected_paths: [httpx/httpx/_config.py, httpx/httpx/_transports/default.py, requests/src/requests/adapters.py, requests/src/requests/utils.py]
+  expected_spans: ["httpx/httpx/_config.py:201-243", "httpx/httpx/_transports/default.py:136-215", "httpx/httpx/_transports/default.py:280-359", "requests/src/requests/adapters.py:592-611", "requests/src/requests/utils.py:1018-1031"]
+- id: httpx-error-mapping
+  kind: cross-file
+  question: Where are errors from the underlying connection library translated into the client's own exception types, and where is that exception hierarchy defined?
+  expected_paths: [httpx/httpx/_transports/default.py, httpx/httpx/_exceptions.py]
+  expected_all:
+    - [httpx/httpx/_transports/default.py]
+    - [httpx/httpx/_exceptions.py]
+- id: click-choice-case
+  kind: function
+  question: How does a parameter limited to a fixed set of values match what the user typed when case-insensitive matching is turned on?
+  expected_paths: [click/src/click/types.py]
+  expected_spans: ["click/src/click/types.py:268-304"]
+- id: click-unknown-subcommand
+  kind: function
+  question: What happens when the word after a command group is not a known subcommand but looks like an option?
+  expected_paths: [click/src/click/core.py]
+  expected_spans: ["click/src/click/core.py:1722-1747"]
+- id: click-prompt-option
+  kind: cross-file
+  question: When an option is configured to prompt, where is the user asked for its value, and which helper hides the typed input and asks a second time for confirmation?
+  expected_paths: [click/src/click/core.py, click/src/click/termui.py]
+  expected_all:
+    - [click/src/click/core.py]
+    - [click/src/click/termui.py]
+- id: rich-emoji-codes
+  kind: function
+  question: Where are emoji names written between colons replaced with the actual emoji characters?
+  expected_paths: [rich/rich/_emoji_replace.py, rich/rich/emoji.py]
+  expected_spans: ["rich/rich/_emoji_replace.py:12-32", "rich/rich/emoji.py:27-67"]
+- id: rich-color-downgrade
+  kind: cross-file
+  question: When a 24-bit color is printed on a terminal that supports only 256 colors, where is the terminal's capability detected and where is the color converted to the nearest supported one?
+  expected_paths: [rich/rich/console.py, rich/rich/color.py]
+  expected_all:
+    - [rich/rich/console.py]
+    - [rich/rich/color.py]
+- id: rich-logging
+  kind: usage
+  question: How do I make Python's standard logging output colorful and nicely formatted, with timestamps and levels in columns?
+  expected_paths: [rich/docs/source/logging.rst, rich/rich/logging.py, rich/rich/_log_render.py]
+  expected_spans: ["rich/docs/source/logging.rst:1-27", "rich/rich/logging.py:18-239", "rich/rich/_log_render.py:14-86"]
